@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rancagua GPT - Chat</title>
+
+  <!-- Bootstrap 5 desde CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background: #f2f2f2;
+      font-family: Arial, sans-serif;
+    }
+
+    .chat-container {
+      max-width: 720px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .chat-header img {
+      height: 32px;
+    }
+
+    .msg {
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      position: relative;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      animation: fadeIn 0.3s ease-in-out;
+      max-width: 85%;
+    }
+
+    .user {
+      background: #0074D9;
+      color: white;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    .bot {
+      background: #e8f5e9;
+      color: #2e7d32;
+      align-self: flex-start;
+      margin-right: auto;
+    }
+
+    .timestamp {
+      font-size: 10px;
+      color: #000;
+      position: absolute;
+      bottom: 4px;
+      right: 10px;
+    }
+
+    #messages {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 15px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .sugerencias .btn {
+      margin-bottom: 6px;
+      background-color: #f0f8ff;
+      border: 1px solid #0074D9;
+      color: #0074D9;
+    }
+
+    .sugerencias .btn:hover {
+      background-color: #e0efff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container chat-container">
+    <div class="chat-header">
+      <img src="logo.jpg" alt="Logo Rancagua" />
+      <h5 class="mb-0">Rancagua GPT</h5>
+    </div>
+
+    <div class="sugerencias mb-3">
+      <button class="btn w-100" onclick="usarSugerencia('¿Tienes la Ordenanza de participación?')">¿Tienes la Ordenanza de participación?</button>
+      <button class="btn w-100" onclick="usarSugerencia('¿Cómo pago el permiso de circulación?')">¿Cómo pago el permiso de circulación?</button>
+      <button class="btn w-100" onclick="usarSugerencia('¿Dónde queda la Dirección de Tránsito?')">¿Dónde queda la Dirección de Tránsito?</button>
+      <button class="btn w-100" onclick="usarSugerencia('¿Cuáles son los requisitos para postular al descuento del gas?')">¿Cuáles son los requisitos para postular al descuento del gas?</button>
+      <button class="btn w-100" onclick="usarSugerencia('¿Cuál es la página web del municipio?')">¿Cuál es la página web del municipio?</button>
+      <button class="btn w-100" onclick="usarSugerencia('¿Dónde encuentro el Plan de PLADECO?')">¿Dónde encuentro el Plan de desarrollo Comunal (PLADECO)?</button>
+    </div>
+
+    <div id="messages"></div>
+
+    <div class="input-group">
+      <input type="text" id="input" class="form-control" placeholder="Escribe tu pregunta..." onkeypress="verificarEnter(event)" />
+      <button class="btn btn-primary" onclick="enviarPregunta()">Enviar</button>
+    </div>
+  </div>
+
+  <script>
+    function obtenerHoraActual() {
+      const ahora = new Date();
+      return ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function agregarMensaje(texto, clase, esTemporal = false) {
+      const div = document.createElement("div");
+      div.className = "msg " + clase;
+      div.innerHTML = texto + `<div class="timestamp">${obtenerHoraActual()}</div>`;
+      if (esTemporal) div.id = "escribiendo";
+      document.getElementById("messages").appendChild(div);
+      div.scrollIntoView();
+    }
+
+    async function enviarPregunta() {
+      const input = document.getElementById("input");
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      agregarMensaje(msg, "user");
+      input.value = "";
+
+      agregarMensaje("✍️ Rancagua GPT está escribiendo", "bot", true);
+
+      let puntos = 0;
+      const escribiendo = document.getElementById("escribiendo");
+      const animacion = setInterval(() => {
+        if (escribiendo) {
+          puntos = (puntos + 1) % 4;
+          escribiendo.innerHTML = `✍️ Rancagua GPT está escribiendo${'.'.repeat(puntos)}<div class="timestamp">${obtenerHoraActual()}</div>`;
+        }
+      }, 400);
+
+      try {
+        const respuesta = await fetch("https://rancagua-gpt.onrender.com/preguntar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pregunta: msg })
+        });
+
+        const data = await respuesta.json();
+
+        setTimeout(() => {
+          clearInterval(animacion);
+          const escribiendo = document.getElementById("escribiendo");
+          if (escribiendo) escribiendo.remove();
+          agregarMensaje(data.respuesta, "bot");
+        }, 840);
+
+      } catch (err) {
+        clearInterval(animacion);
+        const escribiendo = document.getElementById("escribiendo");
+        if (escribiendo) escribiendo.remove();
+        agregarMensaje("⚠️ Error al conectar con el servidor.", "bot");
+      }
+    }
+
+    function verificarEnter(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        enviarPregunta();
+      }
+    }
+
+    function usarSugerencia(texto) {
+      document.getElementById("input").value = texto;
+      enviarPregunta();
+    }
+  </script>
+</body>
+</html>
