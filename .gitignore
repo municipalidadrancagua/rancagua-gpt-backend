@@ -1,0 +1,6 @@
+# Python caches
+__pycache__/
+
+# Entornos y secretos
+*.env
+credenciales/    # nunca subir ahí las credenciales de Sheets
