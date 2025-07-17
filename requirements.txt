@@ -3,3 +3,7 @@ uvicorn
 openai==0.28.1
 python-dotenv
 pandas
+gspread
+google-auth
+google-auth-oauthlib
+requests
