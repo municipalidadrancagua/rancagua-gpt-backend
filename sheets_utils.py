@@ -15,7 +15,7 @@ remote = Path("/etc/secrets/credencialgoogle.json")
 RUTA_CREDENCIALES = Path(os.getenv("GOOGLE_CREDENTIALS_PATH", local if local.exists() else remote))
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-SPREADSHEET_ID = "TU_ID_DE_HOJA"
+SPREADSHEET_ID = "1UiWySOPYU77172vdi5wqczgHjqAA8aGX0M1BqTp6GO0"
 
 def agregar_pregunta(pregunta):
     creds = Credentials.from_service_account_file(str(RUTA_CREDENCIALES), scopes=SCOPES)
