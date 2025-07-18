@@ -1,22 +1,24 @@
+from pathlib import Path
+import os
 import gspread
 from google.oauth2.service_account import Credentials
 
-# Define el alcance (scopes) para editar hojas de cálculo
+# Base de tu proyecto
+BASE_DIR = Path(__file__).parent
+
+# Ruta por defecto local
+local = BASE_DIR / "credenciales" / "credencialgoogle.json"
+# Ruta en Render cuando subes el Secret File
+remote = Path("/etc/secrets/credencialgoogle.json")
+
+# Elige la que exista
+RUTA_CREDENCIALES = Path(os.getenv("GOOGLE_CREDENTIALS_PATH", local if local.exists() else remote))
+
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-
-# Ruta a tu archivo de credenciales
-RUTA_CREDENCIALES = "C:/Users/kevin/Downloads/RancaguaGPT_MVP/credenciales/credencialgoogle.json"  # <- cambia el nombre del archivo si es necesario
-
-# ID de tu Google Sheet (sacado de la URL de la hoja)
-SPREADSHEET_ID = "1UiWySOPYU77172vdi5wqczgHjqAA8aGX0M1BqTp6GO0"
+SPREADSHEET_ID = "TU_ID_DE_HOJA"
 
 def agregar_pregunta(pregunta):
-    # Autenticación
-    creds = Credentials.from_service_account_file(RUTA_CREDENCIALES, scopes=SCOPES)
+    creds = Credentials.from_service_account_file(str(RUTA_CREDENCIALES), scopes=SCOPES)
     client = gspread.authorize(creds)
-
-    # Abrir la hoja y seleccionar la primera pestaña
     sheet = client.open_by_key(SPREADSHEET_ID).sheet1
-
-    # Insertar la pregunta como nueva fila al final
     sheet.append_row([pregunta])
